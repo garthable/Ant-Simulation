@@ -1,7 +1,0 @@
-"pherMap" Location: ~pherMap.txt
-"physMap" Location: ~physMap.txt
-"Data" Location: ~data.txt
-"saveFile" Location: ~saveFile.txt
-
-Map Size X: 20
-Map Size Y: 15

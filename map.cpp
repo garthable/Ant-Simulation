@@ -1,11 +1,8 @@
 #include "map.h"
 
-map::map(std::string newPherFN, std::string newPhysFN, int newXSize, int newYSize)
+map::map(std::string newMapFileName)
 {
-    pherFN = newPherFN;
-    physFN = newPhysFN;
-    xSize = newXSize;
-    ySize = newYSize;
+    mapFileName = newMapFileName;
 }
 
 map::~map()
@@ -15,81 +12,45 @@ map::~map()
     std::cout << "Deleted map!" << std::endl;
 }
 
-void map::nukeMap()
-{
-    std::ofstream fout_pher;
-    std::ofstream fout_phys;
-
-    fout_pher.open(pherFN);
-    fout_phys.open(physFN);
-
-    for (int y = 0; y < ySize; y++)
-    {
-        for (int x = 0; x < xSize; x++)
-        {
-            fout_pher << "0";
-            fout_phys << "-";
-        }
-        fout_pher << std::endl;
-        fout_phys << std::endl;
-    }
-
-    for (int i = 0; i < points.size(); i++)
-        delete points[i];
-}
-
 void map::generateNodes()
 {
-    std::string linePher;
-    std::string linePhys;
-    std::fstream pher;
-    std::fstream phys;
+    std::string currLine;
+    std::fstream mapFile;
 
-    pheromone *pher_ptr = nullptr;
-    int nodeState;
+    int nodeState = 0;
     int foodAmount = 0;
+
+    int y = 0;
 
     node *node_ptr;
 
-    char pherC;
-    char physC;
+    char nodeRep;
 
-    pher.open(pherFN);
-    phys.open(physFN);
+    mapFile.open(mapFileName);
 
-    for (int y = 0; y < ySize; y++)
+    while(getline(mapFile, currLine))
     {
-        getline(pher, linePher);
-        getline(phys, linePhys);
-        for (int x = 0; x < xSize; x++)
+        for (int x = 0; x < currLine.length(); x++)
         {
-            pherC = linePher.at(x);
-            physC = linePhys.at(x);
+            nodeRep = currLine.at(x);
 
-            if (pherC = '0') //Empty
-                pher_ptr = new pheromone(0, 0);
-            else if (pherC == '-') //Contains home pheromone
-                pher_ptr = new pheromone(1, 9);
-            else if (pherC == '+') //Contains food pheromone
-                pher_ptr = new pheromone(2, 9);
-
-            if (physC == '-') //Empty
+            if (nodeRep == '-') //Empty (-)
                 nodeState = 0;
-            else if (physC == '#') //Contains wall
+            else if (nodeRep == '#') //Contains wall (#)
                 nodeState = 1;
-            else if (physC == 'a') //Contains ant
+            else if (nodeRep == 'a') //Contains ant (a)
                 nodeState = 2;
-            else if (isdigit(physC)) //Contains food
+            else if (isdigit(nodeRep)) //Contains food (number)
             {
                 nodeState = 3;
-                foodAmount = int(physC);
+                foodAmount = int(nodeRep);
             }
 
-            node_ptr = new node(x, y, nodeState, foodAmount, *pher_ptr);
-            points.push_back(node_ptr);
-            delete pher_ptr;    
+            node_ptr = new node(x, y, nodeState, foodAmount);
+            points.push_back(node_ptr); 
             foodAmount = 0;
         }
+        y++;
     }
     for (int i = 0; i < points.size(); i++)
     {
@@ -98,11 +59,8 @@ void map::generateNodes()
             std::cout << "generateNodes ERROR: Node not generated!" << std::endl;
             break;
         }
-        else
-            std::cout << "Point: " << points[i]->x << " " << points[i]->y << " Exists at " << i << " in points vector" << std::endl;
     }
-    pher.close();
-    phys.close();
+    mapFile.close();
 }
 
 node* map::findNode(int xLoc, int yLoc)
@@ -186,51 +144,13 @@ char map::getASCII(int xFind, int yFind)
     return 'E';
 }
 
-void map::updatePher()
+void map::updateMap()
 {
     std::fstream file;
     std::string line;
     std::string newLine;
-    char insertChar;
-    file.open(pherFN);
-    while (!changedPher.empty())
-    {
-        //Resets
-        file.clear();
-        file.seekg(0);
-        newLine = "";
-
-        switch(changedPher.top()->pher.type)
-        {
-            case 0:
-                insertChar = '0';
-            case 1:
-                insertChar = '-';
-            case 2:
-                insertChar = '+';
-        }
-
-        //Gets line located at y
-        file.seekg(changedPher.top()->y);
-        getline(file, line);
-
-        //Restructures line at y
-        newLine.append(line.substr(0, changedPher.top()->x-1));
-        newLine = newLine + insertChar;
-        newLine.append(line.substr(changedPher.top()->x+1, line.length()));
-
-        //Sets newLine to line
-        file << newLine;
-        changedPher.pop();
-    }
-}
-void map::updatePhys()
-{
-    std::fstream file;
-    std::string line;
-    std::string newLine;
-    file.open(physFN);
-    while (!changedPhys.empty())
+    file.open(mapFileName);
+    while (!changedMapData.empty())
     {
         //Resets
         file.clear();
@@ -238,24 +158,18 @@ void map::updatePhys()
         newLine = "";
 
         //Gets line located at y
-        file.seekg(changedPhys.top()->y);
+        file.seekg(changedMapData.top()->y);
         getline(file, line);
 
         //Restructures line at y
-        newLine.append(line.substr(0, changedPhys.top()->x-1));
-        newLine = newLine + getASCII(changedPhys.top()->x, changedPhys.top()->y);
-        newLine.append(line.substr(changedPhys.top()->x+1, line.length()));
+        newLine.append(line.substr(0, changedMapData.top()->x-1));
+        newLine = newLine + getASCII(changedMapData.top()->x, changedMapData.top()->y);
+        newLine.append(line.substr(changedMapData.top()->x+1, line.length()));
 
         //Sets newLine to line
         file << newLine;
-        changedPhys.pop();
+        changedMapData.pop();
     }
-}
-
-void map::update()
-{
-    updatePher();
-    updatePhys();
 }
 
 void map::displayNodeData(int xFind, int yFind)

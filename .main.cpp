@@ -15,22 +15,16 @@ int main(int argc, char *argv[])
 
     if (argc > 1)
         settingsFile = argv[1];
-
-    fileManager fM(settingsFile);
-
-    if (fM.updateSettings() == -1)
-        return -1;
     
-    map simMap(fM.getPherMap(), fM.getPhysMap(), fM.getMapSizeX(), fM.getMapSizeY());
+    map simMap("~map.txt");
 
     //UI
     while (true)
     {
         std::cout << "====== MAIN MENU ======" << std::endl;
         std::cout << "1. Run Simulation" << std::endl;
-        std::cout << "2. Nuke Maps" << std::endl;
-        std::cout << "3. Get node data" << std::endl;
-        std::cout << "4. Quit" << std::endl;
+        std::cout << "2. Get node data" << std::endl;
+        std::cout << "3. Quit" << std::endl;
 
         getline(std::cin, line);
         input = spStoi(line);
@@ -43,10 +37,7 @@ int main(int argc, char *argv[])
             case 1: //Run simulation
                 runSimulation(simMap);
                 break;
-            case 2: //Nuke maps
-                simMap.nukeMap();
-                break;
-            case 3: //Display node
+            case 2: //Display node
                 int x;
                 int y;
                 getline(std::cin, line);
@@ -55,7 +46,7 @@ int main(int argc, char *argv[])
                 y = stoi(line);
                 simMap.displayNodeData(x, y);
                 break;
-            case 4: //Exits program
+            case 3: //Exits program
                 std::cout << "Goodbye!" << std::endl;
                 return 1;
                 break;

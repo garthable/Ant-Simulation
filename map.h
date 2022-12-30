@@ -4,24 +4,12 @@
 #include <vector>
 #include <stack>
 
-#include "ant.h"
-
 #pragma once
 
 struct pheromone
 {
-    int type; //0 = none, 1 = home, 2 = food
-    int strength;
-
-    pheromone()
-    {
-
-    }
-    pheromone(int newType, int newStrength)
-    {
-        type = newType;
-        strength = newStrength;
-    }
+    int returnStrength;
+    int foodStrength;
 };
 
 struct adj;
@@ -32,18 +20,17 @@ struct node
     int y;
     int state;
     int foodAmount;
+    int distance;
+    bool visited;
     pheromone pher;
-    std::vector<bool> visited;
     std::vector<adj> adjNodes;
     
-    node (int newX, int newY, int newState, int newFoodAmount, pheromone newPheromone)
+    node (int newX, int newY, int newState, int newFoodAmount)
     {
         x = newX;
         y = newY;
         state = newState;
         foodAmount = newFoodAmount;
-        pher = newPheromone;
-        pher = newPheromone;
     }
 };
 
@@ -56,18 +43,13 @@ struct adj
 class map
 {
     private:
-        std::vector<node*> points;
-        std::vector<ant> ants;
-        std::string pherFN;
-        std::string physFN;
-        int xSize;
-        int ySize;
-        bool isPher;
-        std::stack<node*> changedPher;
-        std::stack<node*> changedPhys;
+        std::string mapFileName;
+        std::stack<node*> changedMapData;
 
     public:
-        map(std::string, std::string, int, int);
+        std::vector<node*> points;
+
+        map(std::string);
         ~map();
 
         void nukeMap();
@@ -77,9 +59,7 @@ class map
         void reducePheromone();
         
         char getASCII(int, int);
-        void updatePher();
-        void updatePhys();
-        void update();
+        void updateMap();
 
         void displayNodeData(int, int);
 };
